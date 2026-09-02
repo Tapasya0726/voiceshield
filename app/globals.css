@@ -107,8 +107,34 @@
   * {
     @apply border-border outline-ring/50;
   }
+  html {
+    -webkit-text-size-adjust: 100%;
+    scrollbar-gutter: stable;
+  }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
+    overflow-x: hidden;
+    font-feature-settings: 'ss01', 'cv11';
+  }
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+  /* Thin, unobtrusive scrollbars for dense panels */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: oklch(1 0 0 / 14%) transparent;
+  }
+  *::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  *::-webkit-scrollbar-thumb {
+    background: oklch(1 0 0 / 14%);
+    border-radius: 999px;
+  }
+  *::-webkit-scrollbar-track {
+    background: transparent;
   }
 }
 
@@ -123,6 +149,90 @@
       linear-gradient(to right, oklch(1 0 0 / 3%) 1px, transparent 1px),
       linear-gradient(to bottom, oklch(1 0 0 / 3%) 1px, transparent 1px);
     background-size: 32px 32px;
+  }
+  /* Focal panels: status-colored hairline + soft ambient glow driven by --focal */
+  .focal {
+    --focal: var(--primary);
+    border-color: color-mix(in oklch, var(--focal) 35%, var(--border));
+    box-shadow:
+      0 1px 0 0 oklch(1 0 0 / 5%) inset,
+      0 0 0 1px color-mix(in oklch, var(--focal) 10%, transparent),
+      0 24px 48px -24px color-mix(in oklch, var(--focal) 35%, transparent);
+    transition:
+      border-color 600ms ease,
+      box-shadow 600ms ease;
+  }
+  .focal::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 2px;
+    border-radius: inherit;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    background: var(--focal);
+    opacity: 0.9;
+    transition: background-color 600ms ease;
+  }
+  .row-hover {
+    transition:
+      background-color 160ms ease,
+      color 160ms ease;
+  }
+  .row-hover:hover {
+    background-color: color-mix(in oklch, var(--secondary) 55%, transparent);
+  }
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* ---- Mobile ---------------------------------------------------------- */
+@media (max-width: 767px) {
+  :root {
+    --radius: 0.625rem;
+  }
+  /* Make dense mono labels legible on small screens */
+  .text-\[10px\] {
+    font-size: 0.6875rem;
+  }
+  /* Larger tap targets for all interactive elements */
+  button,
+  [role='button'],
+  a {
+    min-height: 40px;
+  }
+  .glass {
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+}
+
+@media (max-width: 380px) {
+  html {
+    font-size: 15px;
+  }
+}
+
+/* Coarse pointers: no hover-only affordances */
+@media (hover: none) {
+  .row-hover:hover {
+    background-color: transparent;
+  }
+}
+
+/* Respect reduced motion: keep state changes, drop ambient animation */
+@media (prefers-reduced-motion: reduce) {
+  .animate-ring-ping,
+  .animate-scan,
+  .animate-pulse,
+  .animate-ping,
+  .animate-fade-up,
+  .animate-sweep {
+    animation: none !important;
+  }
+  * {
+    transition-duration: 0.01ms !important;
   }
 }
 
@@ -164,4 +274,29 @@
 }
 .animate-scan {
   animation: scan 2.4s linear infinite;
+}
+
+/* Rotating conic sweep used behind the live call indicator (radar-style) */
+@keyframes sweep {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.animate-sweep {
+  animation: sweep 4s linear infinite;
+}
+
+/* Number tick-in for values that change */
+@keyframes value-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-value-in {
+  animation: value-in 0.35s ease-out both;
 }
